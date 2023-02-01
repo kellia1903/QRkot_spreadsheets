@@ -8,20 +8,22 @@ from app.models import CharityProject
 
 
 FORMAT = "%Y/%m/%d %H:%M:%S"
+NOW_DATE_TIME = datetime.now().strftime(FORMAT)
+SPREADSHEETS_BODY = {
+    'properties': {'title': f'Отчет на {NOW_DATE_TIME}',
+                   'locale': 'ru_RU'},
+    'sheets': [{'properties': {'sheetType': 'GRID',
+                               'sheetId': 0,
+                               'title': 'Лист1',
+                               'gridProperties': {'rowCount': 100,
+                                                  'columnCount': 10}}}]
+}
 
 
 async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
-    now_date_time = datetime.now().strftime(FORMAT)
     service = await wrapper_services.discover('sheets', 'v4')
-    spreadsheet_body = {
-        'properties': {'title': f'Отчет на {now_date_time}',
-                       'locale': 'ru_RU'},
-        'sheets': [{'properties': {'sheetType': 'GRID',
-                                   'sheetId': 0,
-                                   'title': 'Лист1',
-                                   'gridProperties': {'rowCount': 100,
-                                                      'columnCount': 10}}}]
-    }
+    spreadsheet_body = SPREADSHEETS_BODY
+    print(spreadsheet_body)
     response = await wrapper_services.as_service_account(
         service.spreadsheets.create(json=spreadsheet_body)
     )
@@ -46,14 +48,13 @@ async def set_user_permissions(
 
 
 async def spreadsheets_update_value(
-        spreadsheetid: str,
+        spreadsheet_id: str,
         projects: List[CharityProject],
         wrapper_services: Aiogoogle
 ) -> None:
-    now_date_time = datetime.now().strftime(FORMAT)
     service = await wrapper_services.discover('sheets', 'v4')
     table_values = [
-        ['Отчет от', now_date_time],
+        ['Отчет от', NOW_DATE_TIME],
         ['Топ проектов по скорости закрытия'],
         ['Название проекта', 'Время сбора', 'Описание']
     ]
@@ -69,7 +70,7 @@ async def spreadsheets_update_value(
     rows_count = len(update_body['values'])
     await wrapper_services.as_service_account(
         service.spreadsheets.values.update(
-            spreadsheetId=spreadsheetid,
+            spreadsheetId=spreadsheet_id,
             range=f'A1:C{rows_count}',
             valueInputOption='USER_ENTERED',
             json=update_body
