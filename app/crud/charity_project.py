@@ -16,7 +16,7 @@ class CRUDCharityProject(CRUDBase):
             select(self.model).where(self.model.name == charity_project_name)
         )
         return charity_project.scalars().first()
-    
+
     async def get_projects_by_completion_rate(
         self,
         session: AsyncSession()
@@ -29,7 +29,7 @@ class CRUDCharityProject(CRUDBase):
                 func.julianday(CharityProject.create_date)
             )
         )
-        
+
         return projects.scalars().all()
 
 
